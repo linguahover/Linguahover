@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinguaHover — Hover. Translate. Learn.</title>
+<meta name="description" content="LinguaHover is a browser extension that turns any webpage into a language classroom. Hover a word, hear it, save it, master it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET & BASE ─── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  font-family:'Geist',system-ui,sans-serif;
+  background:#08080a;
+  color:#e8e8f0;
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+
+/* ─── TOKENS ─── */
+:root{
+  --bg:#08080a;
+  --bg2:#0f0f14;
+  --bg3:#16161d;
+  --border:#1e1e28;
+  --border2:#2a2a38;
+  --muted:#6b6b80;
+  --text:#e8e8f0;
+  --text2:#a0a0b8;
+  --accent:#7c6af7;
+  --accent-glow:rgba(124,106,247,.35);
+  --accent2:#5b4ae8;
+  --green:#3ecf8e;
+  --green-bg:rgba(62,207,142,.1);
+  --lock:#3a3a48;
+  --radius:12px;
+  --radius-lg:18px;
+  --radius-xl:24px;
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(20px,5vw,60px);
+  height:60px;
+  background:rgba(8,8,10,.8);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-family:'Instrument Serif',serif;
+  font-size:20px;
+  color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.nav-logo span{
+  width:28px;height:28px;
+  background:var(--accent);
+  border-radius:8px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:14px;font-style:normal;font-family:'Geist',sans-serif;font-weight:700;
+  color:#fff;
+}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:13.5px;color:var(--muted);transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{
+  background:var(--accent);
+  color:#fff!important;
+  padding:8px 18px;
+  border-radius:99px;
+  font-size:13px;font-weight:500;
+  transition:opacity .2s,transform .2s!important;
+}
+.nav-cta:hover{opacity:.9;transform:translateY(-1px)!important}
+@media(max-width:640px){.nav-links a:not(.nav-cta){display:none}}
+
+/* ─── HERO ─── */
+.hero{
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;
+  padding:120px clamp(20px,5vw,60px) 80px;
+  position:relative;overflow:hidden;
+}
+.hero-glow{
+  position:absolute;
+  width:700px;height:700px;
+  background:radial-gradient(ellipse,rgba(124,106,247,.18) 0%,transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(var(--border) 1px,transparent 1px),
+    linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:60px 60px;
+  opacity:.3;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 50%,black,transparent);
+  pointer-events:none;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  border:1px solid var(--border2);
+  background:var(--bg2);
+  border-radius:99px;
+  padding:6px 14px;
+  font-size:12px;color:var(--muted);
+  letter-spacing:.05em;text-transform:uppercase;font-weight:500;
+  margin-bottom:32px;position:relative;z-index:1;
+}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+h1{
+  font-family:'Instrument Serif',serif;
+  font-size:clamp(44px,8vw,88px);
+  line-height:1.02;
+  letter-spacing:-.02em;
+  color:var(--text);
+  max-width:800px;
+  margin-bottom:24px;
+  position:relative;z-index:1;
+}
+h1 em{font-style:italic;color:var(--accent)}
+.hero-sub{
+  font-size:clamp(15px,2vw,18px);
+  color:var(--text2);
+  line-height:1.7;
+  max-width:520px;
+  margin-bottom:40px;
+  font-weight:300;
+  position:relative;z-index:1;
+}
+.hero-btns{
+  display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
+  margin-bottom:64px;position:relative;z-index:1;
+}
+.btn-primary{
+  background:var(--accent);
+  color:#fff;
+  padding:13px 28px;
+  border-radius:99px;
+  font-size:15px;font-weight:500;
+  display:inline-flex;align-items:center;gap:8px;
+  box-shadow:0 0 32px var(--accent-glow);
+  transition:transform .2s,box-shadow .2s;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 48px var(--accent-glow)}
+.btn-ghost{
+  color:var(--text2);
+  padding:13px 24px;
+  border-radius:99px;
+  font-size:15px;font-weight:400;
+  border:1px solid var(--border2);
+  transition:border-color .2s,color .2s;
+}
+.btn-ghost:hover{border-color:var(--muted);color:var(--text)}
+
+/* ─── DEMO CARD ─── */
+.demo-wrap{
+  position:relative;z-index:1;
+  background:var(--bg2);
+  border:1px solid var(--border2);
+  border-radius:var(--radius-xl);
+  padding:28px 32px;
+  max-width:560px;
+  width:100%;
+  box-shadow:0 24px 64px rgba(0,0,0,.5);
+}
+.demo-context{
+  font-size:16px;color:var(--text2);line-height:1.7;
+  margin-bottom:20px;text-align:left;
+}
+.demo-highlight{
+  background:rgba(124,106,247,.15);
+  border-bottom:2px solid var(--accent);
+  padding:1px 2px;
+  border-radius:3px;
+  color:var(--text);
+  cursor:default;
+  position:relative;
+}
+.demo-popup{
+  position:absolute;
+  top:calc(100% + 10px);left:50%;transform:translateX(-50%);
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:var(--radius-lg);
+  padding:16px 18px;
+  min-width:260px;
+  box-shadow:0 16px 48px rgba(0,0,0,.6);
+  text-align:left;
+  z-index:10;
+}
+.popup-word{font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px}
+.popup-ipa{font-size:13px;color:var(--muted);margin-bottom:4px;font-style:italic}
+.popup-pos{
+  display:inline-block;font-size:10px;background:rgba(124,106,247,.15);
+  color:var(--accent);border-radius:99px;padding:2px 8px;margin-bottom:12px;
+}
+.popup-translation{font-size:13.5px;color:var(--text2);line-height:1.5;margin-bottom:14px}
+.popup-actions{display:flex;gap:8px}
+.popup-btn{
+  flex:1;padding:7px;border-radius:8px;font-size:12px;font-weight:500;
+  background:var(--border2);color:var(--text2);text-align:center;
+  cursor:pointer;transition:background .2s;border:none;
+}
+.popup-btn:hover{background:var(--border);color:var(--text)}
+.popup-btn.save{background:rgba(124,106,247,.2);color:var(--accent)}
+
+/* ─── MARQUEE ─── */
+.marquee-wrap{
+  overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:16px 0;background:var(--bg2);
+  position:relative;
+}
+.marquee-wrap::before,.marquee-wrap::after{
+  content:'';position:absolute;top:0;bottom:0;width:120px;z-index:2;
+}
+.marquee-wrap::before{left:0;background:linear-gradient(90deg,var(--bg2),transparent)}
+.marquee-wrap::after{right:0;background:linear-gradient(-90deg,var(--bg2),transparent)}
+.marquee-track{display:flex;gap:0;width:max-content;animation:marquee 22s linear infinite}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.marquee-item{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:0 32px;
+  font-size:14px;color:var(--muted);
+  border-right:1px solid var(--border);
+  white-space:nowrap;
+}
+.marquee-item span{color:var(--text2);font-weight:500}
+.marquee-item em{color:var(--accent);font-style:normal;font-size:12px}
+
+/* ─── SECTION WRAPPER ─── */
+section{padding:100px clamp(20px,5vw,60px)}
+.sec-label{
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.15em;
+  color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:10px;
+}
+.sec-label::before{
+  content:attr(data-num);
+  font-size:10px;opacity:.5;
+}
+h2{
+  font-family:'Instrument Serif',serif;
+  font-size:clamp(32px,5vw,56px);
+  line-height:1.1;letter-spacing:-.02em;
+  color:var(--text);margin-bottom:16px;
+}
+.sec-sub{font-size:17px;color:var(--text2);line-height:1.65;font-weight:300;max-width:520px;margin-bottom:56px}
+
+/* ─── WORD CARDS ─── */
+.word-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;
+  margin-bottom:48px;
+}
+.word-card{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--radius-lg);padding:20px;
+  transition:border-color .2s,transform .2s;cursor:default;
+}
+.word-card:hover{border-color:var(--accent);transform:translateY(-3px)}
+.word-card-lang{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
+.word-card-word{font-family:'Instrument Serif',serif;font-size:24px;color:var(--text);margin-bottom:4px}
+.word-card-ipa{font-size:12px;color:var(--muted);font-style:italic;margin-bottom:10px}
+.word-card-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;color:var(--text2);
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:99px;padding:3px 10px;
+}
+.word-card.active{border-color:var(--accent)}
+.word-card-meaning{margin-top:14px;font-size:13px;color:var(--text2);line-height:1.55}
+
+/* ─── HOW IT WORKS ─── */
+.steps-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+}
+@media(max-width:700px){.steps-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:440px){.steps-grid{grid-template-columns:1fr}}
+.step-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:28px 22px;
+  position:relative;overflow:hidden;
+}
+.step-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(124,106,247,.06),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.step-card:hover::before{opacity:1}
+.step-num{
+  font-family:'Instrument Serif',serif;
+  font-size:13px;color:var(--accent);opacity:.6;margin-bottom:20px;
+}
+.step-icon{font-size:28px;margin-bottom:16px}
+.step-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px}
+.step-desc{font-size:13.5px;color:var(--text2);line-height:1.6}
+.step-connector{
+  display:flex;align-items:flex-start;gap:0;
+}
+
+/* ─── FEATURES TABLE ─── */
+.features-section{background:var(--bg2)}
+.feat-table-wrap{max-width:900px;margin:0 auto}
+.plan-cols{
+  display:grid;grid-template-columns:220px 1fr 1fr;gap:0;
+  margin-bottom:2px;
+}
+@media(max-width:600px){.plan-cols{grid-template-columns:1fr 1fr}}
+.plan-col-head{padding:20px 24px 16px;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+.plan-col-free{background:var(--bg3);border:1px solid var(--border2)}
+.plan-col-pro{background:var(--accent);border:1px solid var(--accent2)}
+.plan-col-spacer{background:transparent}
+@media(max-width:600px){.plan-col-spacer{display:none}}
+.col-name{font-family:'Instrument Serif',serif;font-size:20px;color:var(--text);margin-bottom:4px}
+.plan-col-pro .col-name{color:#fff}
+.col-price{font-size:13px;color:var(--muted)}
+.plan-col-pro .col-price{color:rgba(255,255,255,.7)}
+.col-badge{
+  display:inline-block;margin-top:8px;font-size:10px;font-weight:600;
+  letter-spacing:.07em;text-transform:uppercase;
+  padding:3px 10px;border-radius:99px;
+}
+.plan-col-free .col-badge{background:var(--border2);color:var(--muted)}
+.plan-col-pro .col-badge{background:rgba(255,255,255,.2);color:#fff}
+
+/* category group */
+.feat-group{margin-bottom:0}
+.feat-group-header{
+  display:grid;grid-template-columns:220px 1fr 1fr;
+  gap:0;padding:20px 0 8px;
+  border-bottom:1px solid var(--border);
+}
+@media(max-width:600px){.feat-group-header{grid-template-columns:1fr}}
+.feat-group-icon{
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--muted);padding:8px 0;
+  display:flex;align-items:center;gap:8px;
+}
+.feat-group-col{font-size:11px;color:var(--border2);padding:8px 16px}
+
+/* sub-group */
+.feat-subgroup{margin-bottom:8px}
+.feat-subgroup-title{
+  display:grid;grid-template-columns:220px 1fr 1fr;
+  padding:12px 0 6px;
+}
+@media(max-width:600px){.feat-subgroup-title{grid-template-columns:1fr}}
+.feat-subgroup-label{
+  font-size:11.5px;font-weight:600;color:var(--muted);
+  letter-spacing:.06em;text-transform:uppercase;
+  display:flex;align-items:center;gap:6px;padding:4px 0;
+}
+
+/* row */
+.feat-row{
+  display:grid;grid-template-columns:220px 1fr 1fr;
+  gap:6px;margin-bottom:4px;align-items:stretch;
+}
+@media(max-width:600px){.feat-row{grid-template-columns:1fr}}
+.feat-label-col{
+  display:flex;align-items:center;
+  font-size:13px;color:var(--text2);padding:8px 0;
+  line-height:1.4;
+}
+@media(max-width:600px){.feat-label-col{display:none}}
+.feat-cell{
+  border-radius:9px;padding:9px 14px;
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;line-height:1.45;min-height:40px;
+}
+.feat-cell-free{background:rgba(62,207,142,.07);border:1px solid rgba(62,207,142,.15);color:#3ecf8e}
+.feat-cell-pro{background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.2);color:#b8b0fa}
+.feat-cell-lock{background:var(--bg3);border:1px dashed var(--border2);color:var(--lock);font-style:italic}
+.feat-check{flex-shrink:0;font-size:14px}
+.feat-lock-icon{flex-shrink:0;font-size:12px;opacity:.5}
+
+/* tags */
+.tag{
+  display:inline-block;font-size:10px;font-weight:600;
+  border-radius:99px;padding:1px 7px;margin-left:4px;
+  white-space:nowrap;flex-shrink:0;vertical-align:middle;
+}
+.tag-limit{background:rgba(245,166,35,.15);color:#f5a623}
+.tag-new{background:rgba(62,207,142,.15);color:#3ecf8e}
+.tag-ai{background:rgba(124,106,247,.2);color:#a898ff}
+.tag-fun{background:rgba(255,100,130,.15);color:#ff6482}
+
+/* ─── STATS ─── */
+.stats-row{
+  display:flex;flex-wrap:wrap;gap:0;
+  border:1px solid var(--border2);border-radius:var(--radius-xl);
+  overflow:hidden;background:var(--bg2);
+  max-width:700px;margin:0 auto;
+}
+.stat-item{
+  flex:1;min-width:130px;text-align:center;
+  padding:32px 20px;border-right:1px solid var(--border2);
+}
+.stat-item:last-child{border-right:none}
+.stat-num{
+  font-family:'Instrument Serif',serif;
+  font-size:44px;color:var(--text);letter-spacing:-.03em;margin-bottom:4px;
+}
+.stat-num sup{font-size:22px;vertical-align:top;margin-top:8px;display:inline-block}
+.stat-label{font-size:12px;color:var(--muted)}
+
+/* ─── PRICING ─── */
+.pricing-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:20px;
+  max-width:720px;margin:0 auto;
+}
+@media(max-width:580px){.pricing-grid{grid-template-columns:1fr}}
+.price-card{
+  border-radius:var(--radius-xl);padding:36px 32px;
+  position:relative;overflow:hidden;
+}
+.price-card-free{background:var(--bg2);border:1px solid var(--border2)}
+.price-card-pro{background:var(--accent);border:1px solid var(--accent2)}
+.price-card-pro::after{
+  content:'most loved';
+  position:absolute;top:18px;right:18px;
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  background:rgba(255,255,255,.2);color:rgba(255,255,255,.8);
+  border-radius:99px;padding:3px 10px;
+}
+.price-card-pro::before{
+  content:'';position:absolute;
+  width:300px;height:300px;border-radius:50%;
+  background:rgba(255,255,255,.05);
+  top:-100px;right:-100px;pointer-events:none;
+}
+.price-tier{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:12px}
+.price-card-pro .price-tier{color:rgba(255,255,255,.6)}
+.price-amount{
+  font-family:'Instrument Serif',serif;
+  font-size:48px;letter-spacing:-.03em;color:var(--text);
+  display:flex;align-items:baseline;gap:6px;margin-bottom:6px;
+}
+.price-card-pro .price-amount{color:#fff}
+.price-amount sub{font-size:16px;opacity:.7;font-family:'Geist',sans-serif;font-weight:300}
+.price-tagline{font-size:13.5px;color:var(--text2);margin-bottom:28px;line-height:1.5}
+.price-card-pro .price-tagline{color:rgba(255,255,255,.75)}
+.price-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:32px}
+.price-list li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;line-height:1.5;color:var(--text2)}
+.price-card-pro .price-list li{color:rgba(255,255,255,.85)}
+.price-list li::before{content:'✦';flex-shrink:0;color:var(--accent);font-size:11px;margin-top:2px}
+.price-card-pro .price-list li::before{color:rgba(255,255,255,.6)}
+.price-btn{
+  display:block;text-align:center;
+  padding:13px;border-radius:99px;
+  font-size:14px;font-weight:500;
+  transition:all .2s;
+}
+.price-card-free .price-btn{
+  background:var(--border2);color:var(--text);
+  border:1px solid var(--border2);
+}
+.price-card-free .price-btn:hover{background:var(--border);border-color:var(--muted)}
+.price-card-pro .price-btn{
+  background:#fff;color:var(--accent);font-weight:600;
+}
+.price-card-pro .price-btn:hover{box-shadow:0 4px 24px rgba(0,0,0,.2)}
+
+/* ─── FAQ ─── */
+.faq-wrap{max-width:640px;margin:0 auto}
+.faq-item{border-bottom:1px solid var(--border)}
+.faq-q{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 0;cursor:pointer;
+  font-size:15px;color:var(--text);font-weight:500;
+  list-style:none;
+}
+.faq-q::-webkit-details-marker{display:none}
+.faq-arrow{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--muted);
+  transition:transform .3s,background .2s;flex-shrink:0;
+}
+details[open] .faq-arrow{transform:rotate(45deg);background:rgba(124,106,247,.2);color:var(--accent)}
+.faq-a{
+  font-size:14px;color:var(--text2);line-height:1.7;
+  padding-bottom:20px;
+}
+
+/* ─── CTA FOOTER ─── */
+.cta-section{
+  text-align:center;padding:120px clamp(20px,5vw,60px);
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.cta-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 0%,rgba(124,106,247,.15),transparent);
+  pointer-events:none;
+}
+.cta-section>*{position:relative;z-index:1}
+.cta-title{
+  font-family:'Instrument Serif',serif;
+  font-size:clamp(36px,6vw,72px);
+  line-height:1.05;letter-spacing:-.02em;
+  color:var(--text);margin-bottom:16px;
+}
+.cta-title em{font-style:italic;color:var(--accent)}
+.cta-sub{font-size:16px;color:var(--text2);margin-bottom:40px;font-weight:300}
+
+/* ─── FOOTER ─── */
+footer{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  gap:16px;padding:28px clamp(20px,5vw,60px);
+  border-top:1px solid var(--border);
+  font-size:13px;color:var(--muted);
+}
+.footer-links{display:flex;gap:24px}
+.footer-links a{color:var(--muted);transition:color .2s}
+.footer-links a:hover{color:var(--text2)}
+
+/* ─── SCROLL ANIMATIONS ─── */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
+
+/* ─── DIVIDER ─── */
+.divider{height:1px;background:var(--border);margin:0}
+
+/* ─── UTILITY ─── */
+.container{max-width:960px;margin:0 auto}
+.text-center{text-align:center}
+.mx-auto{margin-left:auto;margin-right:auto}
+
+@media(max-width:600px){
+  section{padding:70px 20px}
+  .stats-row{flex-direction:column}
+  .stat-item{border-right:none;border-bottom:1px solid var(--border2)}
+  .stat-item:last-child{border-bottom:none}
+  .feat-group-header{grid-template-columns:1fr}
+  .feat-row{grid-template-columns:1fr}
+  h2{font-size:32px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ NAV ══════════════════════════════ -->
+<nav>
+  <a href="#" class="nav-logo"><span>L</span> LinguaHover</a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#compare">Compare</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="#pricing" class="nav-cta">Add to browser →</a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════ HERO ══════════════════════════════ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+
+  <div class="hero-badge"><span class="hero-badge-dot"></span> v2.0 · browser extension</div>
+
+  <h1>Hover any word.<br><em>Speak</em> a new language.</h1>
+
+  <p class="hero-sub">LinguaHover turns the entire internet into your classroom. Translate on hover, hear native pronunciation, save words, and review with spaced repetition — without leaving the page.</p>
+
+  <div class="hero-btns">
+    <a href="#pricing" class="btn-primary">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Install free →
+    </a>
+    <a href="#demo" class="btn-ghost">Watch the 30s demo</a>
+  </div>
+
+  <div class="demo-wrap" id="demo">
+    <div class="demo-context">
+      The reader stumbled upon a moment of pure 
+      <span class="demo-highlight" style="position:relative">serendipity 🖱️
+        <div class="demo-popup">
+          <div class="popup-word">Serendipity</div>
+          <div class="popup-ipa">/ˌsɛr.ənˈdɪp.ɪ.ti/</div>
+          <span class="popup-pos">noun</span>
+          <div class="popup-translation">BN — চমৎকার কিছু আকস্মিকভাবে পাওয়ার সৌভাগ্য।</div>
+          <div class="popup-actions">
+            <button class="popup-btn save">+ Save</button>
+            <button class="popup-btn">Synonyms</button>
+            <button class="popup-btn">Examples</button>
+          </div>
+        </div>
+      </span>.
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ MARQUEE ══════════════════════════════ -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <div class="marquee-item"><span>English</span></div>
+    <div class="marquee-item"><span>বাংলা</span></div>
+    <div class="marquee-item"><span>日本語</span></div>
+    <div class="marquee-item"><span>Español</span></div>
+    <div class="marquee-item"><span>Français</span></div>
+    <div class="marquee-item"><span>हिन्दी</span></div>
+    <div class="marquee-item"><span>Deutsch</span></div>
+    <div class="marquee-item"><span>العربية</span></div>
+    <div class="marquee-item"><span>Português</span></div>
+    <div class="marquee-item"><span>한국어</span></div>
+    <div class="marquee-item"><span>Türkçe</span></div>
+    <div class="marquee-item"><span>Italiano</span></div>
+    <!-- duplicate for seamless loop -->
+    <div class="marquee-item"><span>English</span></div>
+    <div class="marquee-item"><span>বাংলা</span></div>
+    <div class="marquee-item"><span>日本語</span></div>
+    <div class="marquee-item"><span>Español</span></div>
+    <div class="marquee-item"><span>Français</span></div>
+    <div class="marquee-item"><span>हिन्दी</span></div>
+    <div class="marquee-item"><span>Deutsch</span></div>
+    <div class="marquee-item"><span>العربية</span></div>
+    <div class="marquee-item"><span>Português</span></div>
+    <div class="marquee-item"><span>한국어</span></div>
+    <div class="marquee-item"><span>Türkçe</span></div>
+    <div class="marquee-item"><span>Italiano</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ DICTIONARY ══════════════════════════════ -->
+<section id="features" style="background:var(--bg)">
+  <div class="container">
+    <p class="sec-label" data-num="02 ·">the dictionary</p>
+    <h2 class="reveal">A pocket dictionary that<br>lives in your cursor.</h2>
+    <p class="sec-sub reveal reveal-delay-1">Every word on the web becomes interactive. Definitions, pronunciation, grammar — all without leaving the page.</p>
+
+    <div class="word-grid">
+      <div class="word-card active reveal">
+        <div class="word-card-lang">EN · noun</div>
+        <div class="word-card-word">Serendipity</div>
+        <div class="word-card-ipa">/ˌsɛr.ənˈdɪp.ɪ.ti/</div>
+        <div class="word-card-tag">🔊 Listen</div>
+        <div class="word-card-meaning">চমৎকার আকস্মিক প্রাপ্তি</div>
+      </div>
+      <div class="word-card reveal reveal-delay-1">
+        <div class="word-card-lang">JP · noun</div>
+        <div class="word-card-word">Tsundoku</div>
+        <div class="word-card-ipa">/tsɯndokɯ/</div>
+        <div class="word-card-tag">🔊 Listen</div>
+        <div class="word-card-meaning">বই কিনে না পড়ে স্তূপ করে রাখা</div>
+      </div>
+      <div class="word-card reveal reveal-delay-2">
+        <div class="word-card-lang">PT · noun</div>
+        <div class="word-card-word">Saudade</div>
+        <div class="word-card-ipa">/sawˈdadʒi/</div>
+        <div class="word-card-tag">🔊 Listen</div>
+        <div class="word-card-meaning">কারো জন্য গভীর বিষণ্ণ আকাঙ্ক্ষা</div>
+      </div>
+      <div class="word-card reveal reveal-delay-3">
+        <div class="word-card-lang">DK · noun</div>
+        <div class="word-card-word">Hygge</div>
+        <div class="word-card-ipa">/ˈhuːɡə/</div>
+        <div class="word-card-tag">🔊 Listen</div>
+        <div class="word-card-meaning">উষ্ণতা ও আরামের মনোরম অনুভূতি</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ HOW IT WORKS ══════════════════════════════ -->
+<section style="background:var(--bg2);border-top:1px solid var(--border)">
+  <div class="container">
+    <p class="sec-label" data-num="03 ·">the loop</p>
+    <h2 class="reveal">Four moves. Fluency.</h2>
+    <p class="sec-sub reveal reveal-delay-1">A complete learning loop built into every page you visit.</p>
+
+    <div class="steps-grid">
+      <div class="step-card reveal">
+        <div class="step-num">01</div>
+        <div class="step-icon">🖱️</div>
+        <div class="step-title">Hover</div>
+        <div class="step-desc">Just point. Translation pops up before you blink. No clicks, no tabs.</div>
+      </div>
+      <div class="step-card reveal reveal-delay-1">
+        <div class="step-num">02</div>
+        <div class="step-icon">🔊</div>
+        <div class="step-title">Hear</div>
+        <div class="step-desc">Native pronunciation in US, UK, AU. Slow it down when learning.</div>
+      </div>
+      <div class="step-card reveal reveal-delay-2">
+        <div class="step-num">03</div>
+        <div class="step-icon">📖</div>
+        <div class="step-title">Save</div>
+        <div class="step-desc">One tap to bookmark. Auto-tagged by context with AI.</div>
+      </div>
+      <div class="step-card reveal reveal-delay-3">
+        <div class="step-num">04</div>
+        <div class="step-icon">🧠</div>
+        <div class="step-title">Review</div>
+        <div class="step-desc">Spaced repetition surfaces the words you almost forgot.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ FEATURES TABLE ══════════════════════════════ -->
+<section id="compare" class="features-section" style="background:var(--bg)">
+  <div class="container">
+    <p class="sec-label" data-num="04 ·">every feature</p>
+    <h2 class="reveal">The whole library,<br>side by side.</h2>
+    <p class="sec-sub reveal reveal-delay-1">Everything Free includes, everything Pro unlocks.</p>
+
+    <div class="feat-table-wrap">
+      <!-- Plan Headers -->
+      <div class="plan-cols">
+        <div class="plan-col-spacer" style="display:block"></div>
+        <div class="plan-col-head plan-col-free">
+          <div class="col-name">Free</div>
+          <div class="col-price">$0 — forever</div>
+          <span class="col-badge">18 features</span>
+        </div>
+        <div class="plan-col-head plan-col-pro">
+          <div class="col-name">Pro</div>
+          <div class="col-price">$2 / month</div>
+          <span class="col-badge">40+ features</span>
+        </div>
+      </div>
+
+      <!-- ── CORE TRANSLATION ── -->
+      <div class="feat-group">
+        <div class="feat-group-header">
+          <div class="feat-group-icon">🖱️ &nbsp; Core Translation</div>
+        </div>
+
+        <!-- Hover & Translation -->
+        <div class="feat-subgroup">
+          <div style="padding:12px 0 6px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase">↳ &nbsp; Hover &amp; Translation</div>
+
+          <div class="feat-row">
+            <div class="feat-label-col">Instant hover translation</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Instant hover translation <span class="tag tag-limit">30/day</span></div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Unlimited translation — no caps</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Single word translation</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Single word translation</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Sentence &amp; paragraph translation</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Select text to translate</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Select text to translate</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Right-click context menu translate</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Language support</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> 50 languages supported</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> 100+ languages + dialects <span class="tag tag-new">extra</span></div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Bilingual side-by-side mode</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Bilingual side-by-side mode</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Original + translated, together</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">PDF translation</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> PDF translation</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Hover translate inside PDFs</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">YouTube subtitle translation</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> YouTube subtitle translation</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Hover translate on subtitles</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Image OCR translation</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Image OCR translation</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Scan &amp; translate image text <span class="tag tag-ai">AI</span></div>
+          </div>
+        </div>
+
+        <!-- Pronunciation -->
+        <div class="feat-subgroup">
+          <div style="padding:12px 0 6px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase">♪ &nbsp; Pronunciation</div>
+
+          <div class="feat-row">
+            <div class="feat-label-col">Word pronunciation</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Word pronunciation (audio)</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Slow mode — 0.5× playback <span class="tag tag-new">learner</span></div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">IPA phonetic transcription</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> IPA phonetic transcription</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> US / UK / AU accents</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Sentence pronunciation</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Sentence pronunciation</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Listen to entire sentences</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">AI pronunciation scoring</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Pronunciation comparison</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Speak it, get an AI score <span class="tag tag-ai">AI</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LEARNING ── -->
+      <div class="feat-group" style="margin-top:16px">
+        <div class="feat-group-header">
+          <div class="feat-group-icon">📚 &nbsp; Learning</div>
+        </div>
+
+        <!-- Vocabulary -->
+        <div class="feat-subgroup">
+          <div style="padding:12px 0 6px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase">✦ &nbsp; Vocabulary &amp; Word Saving</div>
+
+          <div class="feat-row">
+            <div class="feat-label-col">Save words</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Save words <span class="tag tag-limit">max 20</span></div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Unlimited saves + folder organize</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Meaning + example sentence</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Meaning + example sentence</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Synonyms, antonyms, collocations</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Word list export</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Word list export</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Export to CSV / Anki</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Smart tagging</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Smart tagging</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> AI auto-tag by context <span class="tag tag-ai">AI</span></div>
+          </div>
+        </div>
+
+        <!-- Quiz -->
+        <div class="feat-subgroup">
+          <div style="padding:12px 0 6px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase">◎ &nbsp; Quiz &amp; Practice</div>
+
+          <div class="feat-row">
+            <div class="feat-label-col">Daily quiz</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Daily 5 quiz (from saved words)</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Unlimited daily quiz</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Spaced repetition</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Spaced repetition (SRS)</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Forgotten words appear more</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Fill-in-the-blank quiz</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Fill-in-the-blank quiz</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Context-aware blanks <span class="tag tag-fun">fun</span></div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Listening quiz</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Listening quiz</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Hear it, type it</div>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="feat-subgroup">
+          <div style="padding:12px 0 6px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase">▲ &nbsp; Progress &amp; Streaks</div>
+
+          <div class="feat-row">
+            <div class="feat-label-col">Daily streak</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Daily streak counter</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Weekly &amp; monthly reports</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Detailed analytics</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Detailed analytics</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Topic heatmap of your reading</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Goal setting</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Goal setting</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Weekly word goals + reminders</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CUSTOMIZATION ── -->
+      <div class="feat-group" style="margin-top:16px">
+        <div class="feat-group-header">
+          <div class="feat-group-icon">⚙️ &nbsp; Customization</div>
+        </div>
+        <div class="feat-subgroup">
+          <div style="padding:12px 0 6px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase">✺ &nbsp; Settings &amp; Theming</div>
+
+          <div class="feat-row">
+            <div class="feat-label-col">Dark / Light mode</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Dark / Light mode</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Custom popup themes (5 presets)</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Hover delay</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Adjust hover delay</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Customize popup size &amp; font</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Keyboard shortcut</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Keyboard on/off shortcut</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Site-specific on/off</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Multiple language pairs</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Multiple language pairs</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Two target languages at once</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Auto-detect language</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Auto-detect language</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Detects page language &amp; sets target</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ACCOUNT & SYNC ── -->
+      <div class="feat-group" style="margin-top:16px">
+        <div class="feat-group-header">
+          <div class="feat-group-icon">🔒 &nbsp; Account &amp; Sync</div>
+        </div>
+        <div class="feat-subgroup">
+          <div style="padding:12px 0 6px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase">☁ &nbsp; Storage</div>
+
+          <div class="feat-row">
+            <div class="feat-label-col">Storage</div>
+            <div class="feat-cell feat-cell-free"><span class="feat-check">✓</span> Local storage (this browser only)</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Cloud sync across all devices</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Data backup</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Data backup</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Automatic cloud backup</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-label-col">Priority support</div>
+            <div class="feat-cell feat-cell-lock"><span class="feat-lock-icon">🔒</span> Priority support</div>
+            <div class="feat-cell feat-cell-pro"><span class="feat-check">✦</span> Email + priority feature requests</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row reveal" style="margin-top:56px">
+      <div class="stat-item">
+        <div class="stat-num">100<sup>+</sup></div>
+        <div class="stat-label">languages &amp; dialects</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">40<sup>+</sup></div>
+        <div class="stat-label">features in Pro</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">&lt;50<sup style="font-size:16px">ms</sup></div>
+        <div class="stat-label">hover-to-translate</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">$2</div>
+        <div class="stat-label">all of it, monthly</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ PRICING ══════════════════════════════ -->
+<section id="pricing" style="background:var(--bg2);border-top:1px solid var(--border)">
+  <div class="container text-center">
+    <p class="sec-label mx-auto" style="justify-content:center" data-num="05 ·">pricing</p>
+    <h2 class="reveal">Free is plenty.<br>Pro is unfair.</h2>
+    <p class="sec-sub reveal reveal-delay-1 mx-auto" style="margin-left:auto;margin-right:auto">Simple pricing. No hidden fees. Cancel anytime.</p>
+
+    <div class="pricing-grid">
+      <div class="price-card price-card-free reveal">
+        <div class="price-tier">Free</div>
+        <div class="price-amount">$0 <sub>/ forever</sub></div>
+        <div class="price-tagline">The complete hover-to-translate experience. 18 features to get fluent without paying a cent.</div>
+        <ul class="price-list">
+          <li>30 hover translations / day</li>
+          <li>50 languages</li>
+          <li>Pronunciation + IPA</li>
+          <li>Save up to 20 words</li>
+          <li>Daily 5-question quiz</li>
+          <li>Streak counter &amp; dark mode</li>
+        </ul>
+        <a href="#" class="price-btn">Install for free</a>
+      </div>
+
+      <div class="price-card price-card-pro reveal reveal-delay-1">
+        <div class="price-tier">Pro</div>
+        <div class="price-amount">$2 <sub>/ month</sub></div>
+        <div class="price-tagline">40+ features. Unlimited everything. Designed for serious learners and the chronically curious.</div>
+        <ul class="price-list">
+          <li>Unlimited translation — PDF, YouTube, Image OCR</li>
+          <li>100+ languages &amp; dialects</li>
+          <li>AI pronunciation scoring</li>
+          <li>Spaced repetition + listening quiz</li>
+          <li>Progress analytics &amp; goals</li>
+          <li>Cloud sync · CSV / Anki export</li>
+        </ul>
+        <a href="#" class="price-btn">Go Pro →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ FAQ ══════════════════════════════ -->
+<section id="faq" style="background:var(--bg);border-top:1px solid var(--border)">
+  <div class="container">
+    <p class="sec-label" data-num="06 ·">questions</p>
+    <h2 class="reveal">Things people always ask.</h2>
+
+    <div class="faq-wrap" style="margin-top:48px">
+      <details class="faq-item">
+        <summary class="faq-q">Which browsers are supported? <span class="faq-arrow">+</span></summary>
+        <p class="faq-a">Chrome, Edge, Brave, Arc, and Firefox. Safari support is in beta.</p>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">Does it work offline? <span class="faq-arrow">+</span></summary>
+        <p class="faq-a">Saved words, quizzes, and your local dictionary work fully offline. Live translation needs a connection.</p>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">What languages do you support? <span class="faq-arrow">+</span></summary>
+        <p class="faq-a">Free includes 50 languages. Pro adds 50 more plus regional dialects (e.g. Brazilian vs European Portuguese).</p>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">Is my data private? <span class="faq-arrow">+</span></summary>
+        <p class="faq-a">Free is local-only. Pro sync is end-to-end encrypted. We never sell or read your saved words.</p>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">Can I cancel anytime? <span class="faq-arrow">+</span></summary>
+        <p class="faq-a">Yes. Pro is month-to-month. Cancel and you keep your Free features and saved words.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ CTA ══════════════════════════════ -->
+<div class="cta-section">
+  <div class="cta-title">Hover. &nbsp;Translate.<br><em>Learn.</em></div>
+  <p class="cta-sub">Free forever. Pro when you're ready.</p>
+  <a href="#pricing" class="btn-primary" style="display:inline-flex">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    Add to Chrome — Free
+  </a>
+</div>
+
+<!-- ══════════════════════════════ FOOTER ══════════════════════════════ -->
+<footer>
+  <span>© 2026 LinguaHover · made for curious readers</span>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+    <a href="#">Twitter</a>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting){ e.target.classList.add('visible'); observer.unobserve(e.target); }
+  });
+},{threshold:0.12});
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
