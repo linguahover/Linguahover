@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinguaHover — Activating Pro…</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Geist',system-ui,sans-serif;background:#08080a;color:#e8e8f0;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+a{text-decoration:none;color:inherit}
+
+:root{
+  --bg:#08080a;--bg2:#0f0f14;--bg3:#16161d;
+  --border:#1e1e28;--border2:#2a2a38;
+  --muted:#6b6b80;--text:#e8e8f0;--text2:#a0a0b8;
+  --accent:#7c6af7;--accent-glow:rgba(124,106,247,.35);--accent2:#5b4ae8;
+  --green:#3ecf8e;--green-bg:rgba(62,207,142,.1);
+  --radius:12px;--radius-lg:18px;--radius-xl:24px;
+}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,60px);height:60px;background:rgba(8,8,10,.85);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:'Instrument Serif',serif;font-size:20px;color:var(--text);display:flex;align-items:center;gap:8px;text-decoration:none}
+.nav-logo span{width:28px;height:28px;background:var(--accent);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-family:'Geist',sans-serif;font-weight:700;color:#fff}
+
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:100px clamp(20px,5vw,40px) 60px;position:relative;overflow:hidden}
+
+/* background glow + grid */
+.bg-glow{position:absolute;width:800px;height:800px;background:radial-gradient(ellipse,rgba(124,106,247,.15) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:.25;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black,transparent);pointer-events:none}
+
+.card{position:relative;z-index:1;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-xl);padding:52px 48px;max-width:500px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.5)}
+@media(max-width:540px){.card{padding:36px 24px}}
+
+/* ── States ── */
+/* LOADING */
+.state{display:none}
+.state.active{display:block}
+
+.spinner-wrap{display:flex;justify-content:center;margin-bottom:28px}
+.spinner-ring{width:56px;height:56px;border-radius:50%;border:3px solid var(--border2);border-top-color:var(--accent);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.state-title{font-family:'Instrument Serif',serif;font-size:clamp(26px,4vw,36px);line-height:1.1;letter-spacing:-.02em;color:var(--text);margin-bottom:12px}
+.state-title em{font-style:italic;color:var(--accent)}
+.state-sub{font-size:15px;color:var(--text2);line-height:1.65;font-weight:300;margin-bottom:0}
+
+/* SUCCESS */
+.success-icon{width:72px;height:72px;border-radius:50%;background:var(--green-bg);border:1.5px solid rgba(62,207,142,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 28px;font-size:32px;animation:pop .4s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+.key-box{background:var(--bg3);border:1px dashed var(--border2);border-radius:var(--radius);padding:14px 16px;margin:24px 0 20px;text-align:left}
+.key-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
+.key-val{font-family:monospace;font-size:13px;color:var(--accent);word-break:break-all;line-height:1.5}
+
+.copy-btn{display:inline-flex;align-items:center;gap:7px;background:var(--border2);border:1px solid var(--border2);border-radius:99px;padding:9px 20px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .2s;font-family:'Geist',sans-serif;margin-bottom:14px}
+.copy-btn:hover{background:var(--border);color:var(--text)}
+.copy-btn.copied{background:var(--green-bg);border-color:rgba(62,207,142,.3);color:var(--green)}
+
+.divider{height:1px;background:var(--border);margin:24px 0}
+
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border2);border-radius:99px;padding:5px 14px;font-size:12px;color:var(--muted);margin-bottom:20px}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.ext-prompt{background:rgba(124,106,247,.08);border:1px solid rgba(124,106,247,.2);border-radius:var(--radius-lg);padding:16px 18px;text-align:left;margin-top:4px}
+.ext-prompt-row{display:flex;align-items:flex-start;gap:12px}
+.ext-prompt-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.ext-prompt-text{font-size:13.5px;color:var(--text2);line-height:1.6}
+.ext-prompt-text strong{color:var(--text);font-weight:600}
+
+/* ERROR */
+.error-icon{width:72px;height:72px;border-radius:50%;background:rgba(224,72,72,.1);border:1.5px solid rgba(224,72,72,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 28px;font-size:32px}
+
+.manual-form{margin-top:24px;text-align:left}
+.manual-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;display:block}
+.manual-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 14px;font-size:13px;color:var(--text);font-family:monospace;outline:none;transition:border-color .2s;margin-bottom:10px}
+.manual-input:focus{border-color:var(--accent)}
+.manual-input::placeholder{color:var(--muted);font-family:'Geist',sans-serif}
+.manual-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:99px;padding:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Geist',sans-serif;transition:opacity .2s,transform .2s;box-shadow:0 0 24px var(--accent-glow)}
+.manual-btn:hover{opacity:.9;transform:translateY(-1px)}
+.manual-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.manual-msg{font-size:12px;margin-top:8px;text-align:center;min-height:16px}
+.manual-msg.ok{color:var(--green)}
+.manual-msg.err{color:#e04848}
+
+/* NO KEY state */
+.nokey-note{font-size:13px;color:var(--text2);line-height:1.65;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-top:20px;text-align:left}
+.nokey-note strong{color:var(--text)}
+
+footer{padding:20px clamp(20px,5vw,60px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.footer-links{display:flex;gap:20px}
+.footer-links a{color:var(--muted);transition:color .2s}
+.footer-links a:hover{color:var(--text2)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://linguahover.github.io/Linguahover/" class="nav-logo">
+    <span>L</span> LinguaHover
+  </a>
+</nav>
+
+<main>
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+
+  <div class="card">
+
+    <!-- ── STATE: LOADING ── -->
+    <div class="state active" id="state-loading">
+      <div class="spinner-wrap"><div class="spinner-ring"></div></div>
+      <div class="state-title">Activating your<br><em>Pro plan…</em></div>
+      <p class="state-sub">Verifying your license with Lemon Squeezy. This takes just a second.</p>
+    </div>
+
+    <!-- ── STATE: SUCCESS (auto-activated) ── -->
+    <div class="state" id="state-success">
+      <div class="success-icon">✦</div>
+      <div class="pill"><span class="pill-dot"></span> Pro is now active</div>
+      <div class="state-title">You're all set,<br><em>welcome to Pro.</em></div>
+      <p class="state-sub">LinguaHover Pro has been activated automatically in your extension.</p>
+      <div class="divider"></div>
+      <div class="key-box">
+        <div class="key-label">Your license key (keep this safe)</div>
+        <div class="key-val" id="display-key">—</div>
+      </div>
+      <button class="copy-btn" id="copy-key-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy license key
+      </button>
+      <div class="ext-prompt">
+        <div class="ext-prompt-row">
+          <div class="ext-prompt-icon">🧩</div>
+          <div class="ext-prompt-text">
+            <strong>Extension activated!</strong> Click the LinguaHover icon in your toolbar — Pro features are live. Hover any word to try unlimited translations.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STATE: NO KEY IN URL (manual entry) ── -->
+    <div class="state" id="state-nokey">
+      <div class="success-icon" style="background:rgba(124,106,247,.1);border-color:rgba(124,106,247,.3)">🔑</div>
+      <div class="state-title">Enter your<br><em>license key</em></div>
+      <p class="state-sub">Check your purchase email from Lemon Squeezy and paste the key below.</p>
+      <div class="manual-form">
+        <label class="manual-label" for="manual-key-input">License key</label>
+        <input type="text" class="manual-input" id="manual-key-input"
+          placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+          spellcheck="false" autocomplete="off">
+        <button class="manual-btn" id="manual-activate-btn">Activate Pro →</button>
+        <div class="manual-msg" id="manual-msg"></div>
+      </div>
+      <div class="nokey-note">
+        📧 <strong>Didn't get an email?</strong> Check your spam folder. If it's been more than 5 minutes, <a href="https://linguahover.github.io/Linguahover/#contact" style="color:var(--accent)">contact support</a>.
+      </div>
+    </div>
+
+    <!-- ── STATE: ERROR ── -->
+    <div class="state" id="state-error">
+      <div class="error-icon">✕</div>
+      <div class="state-title">Activation<br><em>failed</em></div>
+      <p class="state-sub" id="error-msg-text">Something went wrong. Try entering your key manually below.</p>
+      <div class="manual-form">
+        <label class="manual-label" for="error-key-input">License key from your email</label>
+        <input type="text" class="manual-input" id="error-key-input"
+          placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+          spellcheck="false" autocomplete="off">
+        <button class="manual-btn" id="error-activate-btn">Try again →</button>
+        <div class="manual-msg" id="error-msg"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <span>© 2025 LinguaHover</span>
+  <div class="footer-links">
+    <a href="https://linguahover.github.io/Linguahover/">Home</a>
+    <a href="https://linguahover.github.io/Linguahover/#contact">Support</a>
+  </div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════
+// LinguaHover — Activate Page
+// Flow:
+//   1. LS redirects here with ?key=LICENSE_KEY
+//   2. Page sends key to extension via chrome.runtime
+//   3. Extension activates Pro automatically
+//   4. Show success state with key displayed
+// ══════════════════════════════════════════════
+
+const EXTENSION_ID = "YOUR_EXTENSION_ID_HERE"; // ← Chrome extension ID দাও
+
+function showState(name) {
+  document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
+  document.getElementById('state-' + name).classList.add('active');
+}
+
+function getParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+// ── Send key to extension ──
+// Method 1: externally_connectable (direct)
+// Method 2: postMessage via bridge content script (fallback)
+function sendKeyToExtension(key, onSuccess, onError) {
+  let done = false;
+
+  // Method 1 — try externally_connectable first
+  try {
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage(
+        EXTENSION_ID,
+        { action: "activateLicense", key },
+        res => {
+          if (done) return;
+          if (chrome.runtime.lastError) {
+            // Method 1 failed — try bridge
+            tryBridge(key, onSuccess, onError);
+            return;
+          }
+          done = true;
+          if (res?.success) onSuccess(key, res.plan);
+          else onError(res?.error || "Invalid or already used license key.");
+        }
+      );
+      return;
+    }
+  } catch(e) {}
+
+  // Method 1 not available — go straight to bridge
+  tryBridge(key, onSuccess, onError);
+}
+
+// Method 2 — postMessage bridge (content script inject করে)
+function tryBridge(key, onSuccess, onError) {
+  let bridgeReady = false;
+  let timeout = null;
+
+  function onBridgeMessage(event) {
+    if (event.origin !== window.location.origin) return;
+    if (!event.data || event.data.source !== 'linguahover-bridge') return;
+
+    if (event.data.action === 'ready') {
+      bridgeReady = true;
+      window.postMessage({ source: 'linguahover-activate', action: 'activateLicense', key }, '*');
+    }
+    if (event.data.action === 'activateResult') {
+      clearTimeout(timeout);
+      window.removeEventListener('message', onBridgeMessage);
+      if (event.data.success) onSuccess(key, event.data.plan);
+      else onError(event.data.error || "Activation failed.");
+    }
+  }
+
+  window.addEventListener('message', onBridgeMessage);
+
+  // Send to already-ready bridge
+  window.postMessage({ source: 'linguahover-activate', action: 'activateLicense', key }, '*');
+
+  // Timeout — extension not found
+  timeout = setTimeout(() => {
+    window.removeEventListener('message', onBridgeMessage);
+    onError("LinguaHover extension not detected. Make sure it's installed and enabled, then try again.");
+  }, 4000);
+}
+
+// ── Copy button ──
+document.getElementById('copy-key-btn').addEventListener('click', function() {
+  const key = document.getElementById('display-key').textContent;
+  if (!key || key === '—') return;
+  navigator.clipboard.writeText(key).then(() => {
+    this.classList.add('copied');
+    this.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+    setTimeout(() => {
+      this.classList.remove('copied');
+      this.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy license key`;
+    }, 2200);
+  });
+});
+
+// ── Manual activate (no-key state) ──
+document.getElementById('manual-activate-btn').addEventListener('click', function() {
+  doManualActivate(
+    document.getElementById('manual-key-input'),
+    document.getElementById('manual-msg'),
+    this
+  );
+});
+document.getElementById('manual-key-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('manual-activate-btn').click();
+});
+
+// ── Error state retry ──
+document.getElementById('error-activate-btn').addEventListener('click', function() {
+  doManualActivate(
+    document.getElementById('error-key-input'),
+    document.getElementById('error-msg'),
+    this
+  );
+});
+document.getElementById('error-key-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('error-activate-btn').click();
+});
+
+function doManualActivate(input, msgEl, btn) {
+  const key = input.value.trim();
+  msgEl.className = 'manual-msg';
+  msgEl.textContent = '';
+  if (!key || key.length < 10) {
+    msgEl.textContent = 'Please enter a valid license key.';
+    msgEl.className = 'manual-msg err';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Activating…';
+  sendKeyToExtension(key,
+    (k) => {
+      document.getElementById('display-key').textContent = k;
+      showState('success');
+    },
+    (err) => {
+      btn.disabled = false;
+      btn.textContent = 'Try again →';
+      msgEl.textContent = err;
+      msgEl.className = 'manual-msg err';
+    }
+  );
+}
+
+// ══ MAIN INIT ══
+(function init() {
+  const key = getParam('key') || getParam('license_key') || getParam('license');
+
+  if (!key) {
+    // No key in URL — show manual entry
+    showState('nokey');
+    return;
+  }
+
+  // Key found in URL — try auto-activate
+  showState('loading');
+
+  // Small delay so spinner shows smoothly
+  setTimeout(() => {
+    sendKeyToExtension(key,
+      (k, plan) => {
+        document.getElementById('display-key').textContent = k;
+        showState('success');
+      },
+      (err) => {
+        document.getElementById('error-msg-text').textContent = err;
+        document.getElementById('error-key-input').value = key;
+        showState('error');
+      }
+    );
+  }, 800);
+})();
+</script>
+</body>
+</html>
